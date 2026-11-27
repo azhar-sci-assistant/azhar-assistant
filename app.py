@@ -23,9 +23,10 @@ html, body, .stApp, [class*="css"] {font-family:'Cairo',sans-serif !important; d
 .hdr h1 {margin:0; font-size:1.55rem; color:#fff; font-weight:700}
 .hdr p {margin:4px 0 0; color:#e6d9a8; font-size:.95rem}
 [data-testid="stChatMessage"] {border-radius:14px; border:1px solid #e3ece7; background:#fff}
+.hdr .by{margin-top:10px;padding-top:8px;border-top:1px solid rgba(201,162,39,.7);color:#fff;font-size:.92rem;font-weight:600;line-height:1.7}
 </style>
 """, unsafe_allow_html=True)
-st.markdown(f'<div class="hdr">{_img}<div><h1>مساعد التوصيف الوظيفي</h1><p>جامعة الأزهر</p><p style="font-size:.8rem">المرجع: كتيب التوصيف الوظيفي 2023 - 2026</p></div></div>', unsafe_allow_html=True)
+st.markdown(f'<div class="hdr">{_img}<div><h1>مساعد التوصيف الوظيفي</h1><p>جامعة الأزهر</p><p style="font-size:.8rem">المرجع: كتيب التوصيف الوظيفي 2023 - 2026</p><p class="by">إعداد وتنفيذ أ.م.د/ الشيماء محسن صادق - أستاذ مساعد طفيليات قسم علم الحيوان والحشرات</p></div></div>', unsafe_allow_html=True)
 
 api_key = os.environ.get("GEMINI_API_KEY")
 if not api_key:
