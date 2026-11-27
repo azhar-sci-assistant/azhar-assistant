@@ -54,8 +54,9 @@ if prompt:
             config=types.GenerateContentConfig(system_instruction=system_instruction, temperature=0.1),
         )
         answer = response.text or "عذراً، تعذر استخراج إجابة من الملف المرجعي."
-    except Exception:
-        answer = "عذراً، الخدمة مشغولة حالياً. حاول مرة أخرى بعد قليل."
+    except Exception as e:
+        st.session_state["last_err"] = type(e).__name__ + ": " + str(e)[:300].replace(api_key, "***")
+        answer = "عذراً، الخدمة مشغولة حالياً. حاول مرة أخرى بعد قليل.\n\n`" + st.session_state["last_err"] + "`"
     st.session_state.messages.append({"role": "assistant", "content": answer})
     with st.chat_message("assistant"):
         st.markdown(answer)
