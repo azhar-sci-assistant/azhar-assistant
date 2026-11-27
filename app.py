@@ -1,4 +1,5 @@
 import os
+import time
 import streamlit as st
 from google import genai
 from google.genai import types
@@ -36,6 +37,21 @@ system_instruction = f"""
 
 client = genai.Client(api_key=api_key)
 
+
+@st.cache_data(ttl=3600)
+def get_models():
+    prefs = ["gemini-3.8-flash", "gemini-3.8-flash-lite", "gemini-2.5-flash", "gemini-2.5-flash-lite"]
+    found = []
+    try:
+        for m in client.models.list():
+            n = m.name.replace("models/", "")
+            if "flash" in n and "gemini" in n and not any(x in n for x in ("image", "tts", "live", "audio", "preview", "exp", "thinking")):
+                found.append(n)
+    except Exception:
+        pass
+    ordered = [p for p in prefs if p in found] + sorted([f for f in found if f not in prefs], reverse=True)
+    return ordered or prefs
+
 if "messages" not in st.session_state:
     st.session_state.messages = []
 for msg in st.session_state.messages:
@@ -47,16 +63,25 @@ if prompt:
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
-    try:
-        response = client.models.generate_content(
-            model="gemini-3.8-flash",
-            contents=prompt,
-            config=types.GenerateContentConfig(system_instruction=system_instruction, temperature=0.1),
-        )
-        answer = response.text or "عذراً، تعذر استخراج إجابة من الملف المرجعي."
-    except Exception as e:
-        st.session_state["last_err"] = type(e).__name__ + ": " + str(e)[:300].replace(api_key, "***")
-        answer = "عذراً، الخدمة مشغولة حالياً. حاول مرة أخرى بعد قليل.\n\n`" + st.session_state["last_err"] + "`"
+    answer = None
+    last_err = ""
+    for model in get_models():
+        for attempt in range(2):
+            try:
+                response = client.models.generate_content(
+                    model=model,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(system_instruction=system_instruction, temperature=0.1),
+                )
+                answer = response.text
+                break
+            except Exception as e:
+                last_err = type(e).__name__ + ": " + str(e)[:200].replace(api_key, "***")
+                time.sleep(2)
+        if answer:
+            break
+    if not answer:
+        answer = "عذراً، الخدمة مشغولة حالياً. حاول مرة أخرى بعد قليل.\n\n`" + last_err + "`"
     st.session_state.messages.append({"role": "assistant", "content": answer})
     with st.chat_message("assistant"):
         st.markdown(answer)
