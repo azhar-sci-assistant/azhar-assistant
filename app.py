@@ -40,7 +40,7 @@ client = genai.Client(api_key=api_key, http_options=types.HttpOptions(timeout=40
 
 @st.cache_data(ttl=3600)
 def get_models():
-    prefs = ["gemini-3.8-flash", "gemini-3.8-flash-lite", "gemini-2.5-flash", "gemini-2.5-flash-lite"]
+    prefs = ["gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-3.5-flash"]
     found = []
     try:
         for m in client.models.list():
@@ -49,8 +49,7 @@ def get_models():
                 found.append(n)
     except Exception:
         pass
-    ordered = [p for p in prefs if p in found] + sorted([f for f in found if f not in prefs], reverse=True)
-    return ordered or prefs
+    return prefs
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -67,7 +66,7 @@ if prompt:
     last_err = ""
     used = ""
     for model in get_models()[:3]:
-        for attempt in range(1):
+        for attempt in range(2):
             try:
                 response = client.models.generate_content(
                     model=model,
