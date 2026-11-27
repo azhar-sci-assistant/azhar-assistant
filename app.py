@@ -4,10 +4,28 @@ import streamlit as st
 from google import genai
 from google.genai import types
 
-st.set_page_config(page_title="مساعد التوصيف الوظيفي - علوم الأزهر", page_icon="🎓")
-st.markdown("<style>body,.stApp{direction:rtl;text-align:right}</style>", unsafe_allow_html=True)
-st.title("مساعد التوصيف الوظيفي لأعضاء هيئة التدريس")
-st.caption("كلية العلوم – فرع البنات بالقاهرة (جامعة الأزهر) | المرجع: كتيب 2023 - 2026")
+st.set_page_config(page_title="مساعد التوصيف الوظيفي - علوم الأزهر", page_icon="🎓", layout="centered")
+import base64
+def _b64(p):
+    try:
+        return base64.b64encode(open(p, "rb").read()).decode()
+    except Exception:
+        return ""
+_logo = _b64("logo.png")
+_img = f'<img src="data:image/png;base64,{_logo}" style="height:92px">' if _logo else ""
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+html, body, .stApp, [class*="css"] {font-family:'Cairo',sans-serif !important; direction:rtl; text-align:right}
+.stApp {background:linear-gradient(180deg,#f4f8f6 0%,#ffffff 60%)}
+.hdr {background:linear-gradient(135deg,#0b3d2e,#1b6b4f); color:#fff; border-radius:18px; padding:22px 26px; display:flex; align-items:center; gap:20px; box-shadow:0 6px 18px rgba(11,61,46,.25); border-bottom:4px solid #c9a227; margin-bottom:18px}
+.hdr img {background:#fff; border-radius:12px; padding:6px}
+.hdr h1 {margin:0; font-size:1.55rem; color:#fff; font-weight:700}
+.hdr p {margin:4px 0 0; color:#e6d9a8; font-size:.95rem}
+[data-testid="stChatMessage"] {border-radius:14px; border:1px solid #e3ece7; background:#fff}
+</style>
+""", unsafe_allow_html=True)
+st.markdown(f'<div class="hdr">{_img}<div><h1>مساعد التوصيف الوظيفي لأعضاء هيئة التدريس</h1><p>كلية العلوم – فرع البنات بالقاهرة | جامعة الأزهر</p><p style="font-size:.8rem">المرجع: كتيب التوصيف الوظيفي 2023 - 2026</p></div></div>', unsafe_allow_html=True)
 
 api_key = os.environ.get("GEMINI_API_KEY")
 if not api_key:
@@ -67,12 +85,17 @@ if prompt:
     with st.chat_message("assistant"):
         box = st.empty()
         box.markdown("⏳ جارٍ البحث في الكتيب...")
-        for model in get_models():
+        combos = [(m, t) for m in get_models() for t in (True, False)]
+        for model, think in combos:
             try:
+                if think:
+                    cfg = types.GenerateContentConfig(system_instruction=system_instruction, temperature=0.1, thinking_config=types.ThinkingConfig(thinking_level="low"))
+                else:
+                    cfg = types.GenerateContentConfig(system_instruction=system_instruction, temperature=0.1)
                 for chunk in client.models.generate_content_stream(
                     model=model,
                     contents=prompt,
-                    config=types.GenerateContentConfig(system_instruction=system_instruction, temperature=0.1),
+                    config=cfg,
                 ):
                     if chunk.text:
                         answer += chunk.text
