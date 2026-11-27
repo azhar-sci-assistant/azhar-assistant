@@ -35,7 +35,7 @@ system_instruction = f"""
 {doc_context}
 """
 
-client = genai.Client(api_key=api_key)
+client = genai.Client(api_key=api_key, http_options=types.HttpOptions(timeout=40000))
 
 
 @st.cache_data(ttl=3600)
@@ -65,8 +65,9 @@ if prompt:
         st.markdown(prompt)
     answer = None
     last_err = ""
-    for model in get_models():
-        for attempt in range(2):
+    used = ""
+    for model in get_models()[:3]:
+        for attempt in range(1):
             try:
                 response = client.models.generate_content(
                     model=model,
@@ -74,6 +75,7 @@ if prompt:
                     config=types.GenerateContentConfig(system_instruction=system_instruction, temperature=0.1),
                 )
                 answer = response.text
+                used = model
                 break
             except Exception as e:
                 last_err = type(e).__name__ + ": " + str(e)[:200].replace(api_key, "***")
@@ -83,5 +85,6 @@ if prompt:
     if not answer:
         answer = "عذراً، الخدمة مشغولة حالياً. حاول مرة أخرى بعد قليل.\n\n`" + last_err + "`"
     st.session_state.messages.append({"role": "assistant", "content": answer})
+    st.session_state["used"] = used
     with st.chat_message("assistant"):
         st.markdown(answer)
