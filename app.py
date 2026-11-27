@@ -35,7 +35,7 @@ system_instruction = f"""
 {doc_context}
 """
 
-client = genai.Client(api_key=api_key, http_options=types.HttpOptions(timeout=40000))
+client = genai.Client(api_key=api_key, http_options=types.HttpOptions(timeout=30000))
 
 
 @st.cache_data(ttl=3600)
@@ -62,28 +62,29 @@ if prompt:
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
-    answer = None
+    answer = ""
     last_err = ""
-    used = ""
-    for model in get_models()[:3]:
-        for attempt in range(2):
+    with st.chat_message("assistant"):
+        box = st.empty()
+        box.markdown("⏳ جارٍ البحث في الكتيب...")
+        for model in get_models():
             try:
-                response = client.models.generate_content(
+                for chunk in client.models.generate_content_stream(
                     model=model,
                     contents=prompt,
                     config=types.GenerateContentConfig(system_instruction=system_instruction, temperature=0.1),
-                )
-                answer = response.text
-                used = model
-                break
+                ):
+                    if chunk.text:
+                        answer += chunk.text
+                        box.markdown(answer)
+                if answer:
+                    break
             except Exception as e:
                 last_err = type(e).__name__ + ": " + str(e)[:200].replace(api_key, "***")
-                time.sleep(2)
-        if answer:
-            break
-    if not answer:
-        answer = "عذراً، الخدمة مشغولة حالياً. حاول مرة أخرى بعد قليل.\n\n`" + last_err + "`"
+                if answer:
+                    break
+                time.sleep(1)
+        if not answer:
+            answer = "عذراً، الخدمة مشغولة حالياً. حاول مرة أخرى بعد قليل.\n\n`" + last_err + "`"
+            box.markdown(answer)
     st.session_state.messages.append({"role": "assistant", "content": answer})
-    st.session_state["used"] = used
-    with st.chat_message("assistant"):
-        st.markdown(answer)
