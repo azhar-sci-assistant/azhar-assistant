@@ -4,7 +4,7 @@ import streamlit as st
 from google import genai
 from google.genai import types
 
-st.set_page_config(page_title="مساعد التوصيف الوظيفي - علوم الأزهر", page_icon="🎓", layout="centered")
+st.set_page_config(page_title="مساعد التوصيف الوظيفي - جامعة الأزهر", page_icon="🎓", layout="centered")
 import base64
 def _b64(p):
     try:
@@ -25,7 +25,7 @@ html, body, .stApp, [class*="css"] {font-family:'Cairo',sans-serif !important; d
 [data-testid="stChatMessage"] {border-radius:14px; border:1px solid #e3ece7; background:#fff}
 </style>
 """, unsafe_allow_html=True)
-st.markdown(f'<div class="hdr">{_img}<div><h1>مساعد التوصيف الوظيفي لأعضاء هيئة التدريس</h1><p>كلية العلوم – فرع البنات بالقاهرة | جامعة الأزهر</p><p style="font-size:.8rem">المرجع: كتيب التوصيف الوظيفي 2023 - 2026</p></div></div>', unsafe_allow_html=True)
+st.markdown(f'<div class="hdr">{_img}<div><h1>مساعد التوصيف الوظيفي</h1><p>جامعة الأزهر</p><p style="font-size:.8rem">المرجع: كتيب التوصيف الوظيفي 2023 - 2026</p></div></div>', unsafe_allow_html=True)
 
 api_key = os.environ.get("GEMINI_API_KEY")
 if not api_key:
@@ -41,7 +41,7 @@ with open("context.txt", "r", encoding="utf-8") as f:
     doc_context = f.read()
 
 system_instruction = f"""
-أنت مساعد ذكي مخصص لأعضاء هيئة التدريس بكلية العلوم – فرع البنات بالقاهرة (جامعة الأزهر)، ومرجعك الوحيد والمعتمد هو كتيب التوصيف الوظيفي (2023 - 2026) المرفق أدناه.
+أنت مساعد ذكي مخصص للعاملين بجامعة الأزهر، ومرجعك الوحيد والمعتمد هو كتيب التوصيف الوظيفي (2023 - 2026) المرفق أدناه.
 
 القواعد الصارمة:
 1. أجب فقط من المعلومات الواردة صراحةً في النص المرجعي التالي.
